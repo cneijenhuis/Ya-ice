@@ -41,33 +41,27 @@ document.getElementById('restart-btn').addEventListener('click', resetGame);
 rollBtn.addEventListener('click', rollDice);
 
 const shakeToggle = document.getElementById('shake-toggle');
-const SHAKE_THRESHOLD = 15;
+const SHAKE_THRESHOLD = 22;
 const SHAKE_COOLDOWN_MS = 1000;
-let lastAcceleration = null;
 let lastShakeTime = 0;
 
 function handleMotion(event) {
-  const acc = event.accelerationIncludingGravity;
-  if (!acc || acc.x === null) return;
+  const acc = event.accelerationIncludingGravity || event.acceleration;
+  if (!acc || acc.x === null || acc.x === undefined) return;
 
-  if (lastAcceleration) {
-    const delta = Math.abs(acc.x - lastAcceleration.x)
-      + Math.abs(acc.y - lastAcceleration.y)
-      + Math.abs(acc.z - lastAcceleration.z);
-    const now = Date.now();
-    if (delta > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN_MS) {
-      lastShakeTime = now;
-      if (!gameOver && rollsLeft > 0) {
-        rollDice();
-      }
+  const magnitude = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z);
+  const now = Date.now();
+  if (magnitude > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN_MS) {
+    lastShakeTime = now;
+    if (!gameOver && rollsLeft > 0) {
+      rollDice();
     }
   }
-  lastAcceleration = { x: acc.x, y: acc.y, z: acc.z };
 }
 
 function enableShake() {
-  lastAcceleration = null;
   window.addEventListener('devicemotion', handleMotion);
+  messageEl.textContent = 'Shake to roll enabled!';
 }
 
 function disableShake() {
