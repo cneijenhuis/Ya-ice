@@ -31,6 +31,11 @@ const totalScoreEl = document.getElementById('total-score');
 const messageEl = document.getElementById('message');
 const gameOverOverlay = document.getElementById('game-over');
 const finalScoreEl = document.getElementById('final-score');
+const saveNotice = document.getElementById('save-notice');
+const saveCategoryEl = document.getElementById('save-category');
+const undoBtn = document.getElementById('undo-btn');
+
+let lastAction = null;
 
 document.getElementById('new-game').addEventListener('click', () => {
   if (confirm('Start a new game? Current progress will be lost.')) {
@@ -39,10 +44,11 @@ document.getElementById('new-game').addEventListener('click', () => {
 });
 document.getElementById('restart-btn').addEventListener('click', resetGame);
 rollBtn.addEventListener('click', rollDice);
+undoBtn.addEventListener('click', undoLastAction);
 
 const shakeToggle = document.getElementById('shake-toggle');
 const SHAKE_THRESHOLD = 22;
-const SHAKE_COOLDOWN_MS = 1000;
+const SHAKE_COOLDOWN_MS = 2500;
 let lastShakeTime = 0;
 
 function handleMotion(event) {
@@ -103,13 +109,41 @@ function resetGame() {
   scores = {};
   CATEGORIES.forEach(c => scores[c.key] = null);
   gameOver = false;
+  lastAction = null;
   gameOverOverlay.classList.add('hidden');
+  hideSaveNotice();
   messageEl.textContent = 'Roll the dice to begin!';
+  render();
+}
+
+function hideSaveNotice() {
+  saveNotice.classList.add('hidden');
+}
+
+function showSaveNotice(label) {
+  saveCategoryEl.textContent = label;
+  saveNotice.classList.remove('hidden');
+}
+
+function undoLastAction() {
+  if (!lastAction) return;
+  scores[lastAction.key] = null;
+  dice = lastAction.dice;
+  held = lastAction.held;
+  rollsLeft = lastAction.rollsLeft;
+  gameOver = false;
+  gameOverOverlay.classList.add('hidden');
+  lastAction = null;
+  hideSaveNotice();
+  messageEl.textContent = 'Undid last score. Pick another category.';
   render();
 }
 
 function rollDice() {
   if (rollsLeft <= 0 || gameOver) return;
+
+  hideSaveNotice();
+  lastAction = null;
 
   const diceEls = diceRow.querySelectorAll('.die');
   for (let i = 0; i < 5; i++) {
@@ -187,9 +221,18 @@ function selectCategory(key) {
     messageEl.textContent = 'Roll the dice first.';
     return;
   }
+  lastAction = {
+    key,
+    dice: [...dice],
+    held: [...held],
+    rollsLeft,
+  };
   scores[key] = calcScore(key);
   held = [false, false, false, false, false];
   rollsLeft = 3;
+
+  const category = CATEGORIES.find(c => c.key === key);
+  showSaveNotice(category.label);
 
   if (CATEGORIES.every(c => scores[c.key] !== null)) {
     endGame();

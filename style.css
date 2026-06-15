@@ -223,6 +223,31 @@ tfoot td {
   font-size: 0.9rem;
 }
 
+.save-notice {
+  text-align: center;
+  margin-top: 8px;
+  padding: 10px;
+  background: #1e293b;
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.save-notice.hidden {
+  display: none;
+}
+
+.save-notice .link-btn {
+  background: none;
+  border: none;
+  color: #facc15;
+  font-weight: bold;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
 .overlay {
   position: fixed;
   inset: 0;
