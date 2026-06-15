@@ -267,6 +267,8 @@ function startGame() {
   playerScores = players.map(() => emptyScores());
   scores = playerScores[0];
   setAccent(players[0].color);
+  if (document.activeElement) document.activeElement.blur();
+  playerListEl.innerHTML = '';
   setupOverlay.classList.add('hidden');
   gameOverOverlay.classList.add('hidden');
   hideSaveNotice();
