@@ -242,7 +242,7 @@ tfoot td {
   color: #cbd5e1;
   font-size: 0.9rem;
   box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  z-index: 5;
+  z-index: 20;
 }
 
 .save-notice.hidden {
@@ -459,4 +459,57 @@ tfoot td {
 .final-score-row.winner .player-label {
   font-weight: bold;
   color: var(--accent);
+}
+
+.game-over-card {
+  max-width: 480px;
+}
+
+.final-table-wrap {
+  overflow-x: auto;
+  margin: 16px 0;
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+
+.final-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.final-table th, .final-table td {
+  padding: 8px 10px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid #334155;
+}
+
+.final-table th:first-child, .final-table td:first-child {
+  text-align: left;
+  position: sticky;
+  left: 0;
+  background: #1e293b;
+}
+
+.final-table thead th {
+  color: #94a3b8;
+  font-weight: normal;
+}
+
+.final-table thead th.player-col {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.final-table .total-row td {
+  font-weight: bold;
+  color: var(--accent);
+  border-bottom: none;
+}
+
+.final-table tr:last-child td {
+  border-bottom: none;
 }

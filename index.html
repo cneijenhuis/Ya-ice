@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ya-Ice</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <div class="app">
@@ -68,13 +68,16 @@
 </div>
 
 <div id="game-over" class="overlay hidden">
-  <div class="overlay-card">
+  <div class="overlay-card game-over-card">
     <h2>Game Over!</h2>
     <div id="final-scores"></div>
+    <div class="final-table-wrap">
+      <table class="final-table" id="final-table"></table>
+    </div>
     <button id="restart-btn" class="primary-btn">New Game</button>
   </div>
 </div>
 
-<script src="game.js?v=5"></script>
+<script src="game.js?v=6"></script>
 </body>
 </html>

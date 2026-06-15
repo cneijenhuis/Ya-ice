@@ -42,6 +42,7 @@ const totalScoreEl = document.getElementById('total-score');
 const messageEl = document.getElementById('message');
 const gameOverOverlay = document.getElementById('game-over');
 const finalScoresEl = document.getElementById('final-scores');
+const finalTableEl = document.getElementById('final-table');
 const saveNotice = document.getElementById('save-notice');
 const saveCategoryEl = document.getElementById('save-category');
 const undoBtn = document.getElementById('undo-btn');
@@ -293,6 +294,7 @@ function undoLastAction() {
   rollsLeft = lastAction.rollsLeft;
   gameOver = false;
   gameOverOverlay.classList.add('hidden');
+  handoffOverlay.classList.add('hidden');
   lastAction = null;
   hideSaveNotice();
   messageEl.textContent = 'Undid last score. Pick another category.';
@@ -466,7 +468,88 @@ function endGame() {
       row.appendChild(score);
       finalScoresEl.appendChild(row);
     });
+
+  renderFinalTable();
   gameOverOverlay.classList.remove('hidden');
+}
+
+function renderFinalTable() {
+  finalTableEl.innerHTML = '';
+
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  headRow.innerHTML = '<th></th>';
+  players.forEach(p => {
+    const th = document.createElement('th');
+    th.className = 'player-col';
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.style.width = '10px';
+    dot.style.height = '10px';
+    dot.style.borderRadius = '50%';
+    dot.style.background = p.color;
+    dot.style.display = 'inline-block';
+    th.appendChild(dot);
+    th.appendChild(document.createTextNode(p.name));
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  finalTableEl.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  let lastSection = null;
+  CATEGORIES.forEach(cat => {
+    if (cat.section !== lastSection) {
+      const sectionRow = document.createElement('tr');
+      const th = document.createElement('td');
+      th.colSpan = players.length + 1;
+      th.textContent = cat.section === 'upper' ? 'Upper Section' : 'Lower Section';
+      th.style.color = 'var(--accent)';
+      th.style.fontSize = '0.8rem';
+      th.style.textTransform = 'uppercase';
+      th.style.letterSpacing = '1px';
+      th.style.textAlign = 'left';
+      sectionRow.appendChild(th);
+      tbody.appendChild(sectionRow);
+      lastSection = cat.section;
+    }
+
+    const row = document.createElement('tr');
+    const labelCell = document.createElement('td');
+    labelCell.textContent = cat.label;
+    row.appendChild(labelCell);
+    players.forEach((p, i) => {
+      const cell = document.createElement('td');
+      cell.textContent = playerScores[i][cat.key] ?? 0;
+      row.appendChild(cell);
+    });
+    tbody.appendChild(row);
+  });
+
+  const bonusRow = document.createElement('tr');
+  const bonusLabel = document.createElement('td');
+  bonusLabel.textContent = `Upper Bonus (≥${UPPER_BONUS_THRESHOLD})`;
+  bonusRow.appendChild(bonusLabel);
+  players.forEach((p, i) => {
+    const cell = document.createElement('td');
+    cell.textContent = upperBonus(playerScores[i]);
+    bonusRow.appendChild(cell);
+  });
+  tbody.appendChild(bonusRow);
+
+  const totalRow = document.createElement('tr');
+  totalRow.className = 'total-row';
+  const totalLabel = document.createElement('td');
+  totalLabel.textContent = 'Total';
+  totalRow.appendChild(totalLabel);
+  players.forEach((p, i) => {
+    const cell = document.createElement('td');
+    cell.textContent = grandTotal(playerScores[i]);
+    totalRow.appendChild(cell);
+  });
+  tbody.appendChild(totalRow);
+
+  finalTableEl.appendChild(tbody);
 }
 
 function renderPlayersBar() {
