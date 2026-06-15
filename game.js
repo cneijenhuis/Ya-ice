@@ -10,7 +10,7 @@ const CATEGORIES = [
   { key: 'fullHouse', label: 'Full House', section: 'lower' },
   { key: 'smallStraight', label: 'Small Straight', section: 'lower' },
   { key: 'largeStraight', label: 'Large Straight', section: 'lower' },
-  { key: 'yahtzee', label: 'Yahtzee', section: 'lower' },
+  { key: 'yahtzee', label: 'Ya-Ice', section: 'lower' },
   { key: 'chance', label: 'Chance', section: 'lower' },
 ];
 
