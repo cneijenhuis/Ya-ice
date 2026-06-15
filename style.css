@@ -128,6 +128,22 @@ header h1 {
   cursor: not-allowed;
 }
 
+.shake-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.shake-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
 .scorecard {
   background: #1e293b;
   border-radius: 12px;

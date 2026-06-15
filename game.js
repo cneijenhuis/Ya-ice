@@ -40,6 +40,68 @@ document.getElementById('new-game').addEventListener('click', () => {
 document.getElementById('restart-btn').addEventListener('click', resetGame);
 rollBtn.addEventListener('click', rollDice);
 
+const shakeToggle = document.getElementById('shake-toggle');
+const SHAKE_THRESHOLD = 15;
+const SHAKE_COOLDOWN_MS = 1000;
+let lastAcceleration = null;
+let lastShakeTime = 0;
+
+function handleMotion(event) {
+  const acc = event.accelerationIncludingGravity;
+  if (!acc || acc.x === null) return;
+
+  if (lastAcceleration) {
+    const delta = Math.abs(acc.x - lastAcceleration.x)
+      + Math.abs(acc.y - lastAcceleration.y)
+      + Math.abs(acc.z - lastAcceleration.z);
+    const now = Date.now();
+    if (delta > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN_MS) {
+      lastShakeTime = now;
+      if (!gameOver && rollsLeft > 0) {
+        rollDice();
+      }
+    }
+  }
+  lastAcceleration = { x: acc.x, y: acc.y, z: acc.z };
+}
+
+function enableShake() {
+  lastAcceleration = null;
+  window.addEventListener('devicemotion', handleMotion);
+}
+
+function disableShake() {
+  window.removeEventListener('devicemotion', handleMotion);
+}
+
+shakeToggle.addEventListener('change', () => {
+  if (!shakeToggle.checked) {
+    disableShake();
+    return;
+  }
+
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    DeviceMotionEvent.requestPermission()
+      .then(permissionState => {
+        if (permissionState === 'granted') {
+          enableShake();
+        } else {
+          shakeToggle.checked = false;
+          messageEl.textContent = 'Motion permission denied. Cannot enable shake to roll.';
+        }
+      })
+      .catch(() => {
+        shakeToggle.checked = false;
+        messageEl.textContent = 'Motion permission request failed.';
+      });
+  } else if (typeof DeviceMotionEvent !== 'undefined') {
+    enableShake();
+  } else {
+    shakeToggle.checked = false;
+    messageEl.textContent = 'Shake detection is not supported on this device.';
+  }
+});
+
 function resetGame() {
   dice = [1, 1, 1, 1, 1];
   held = [false, false, false, false, false];
