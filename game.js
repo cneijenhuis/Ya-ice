@@ -17,11 +17,22 @@ const CATEGORIES = [
 const UPPER_BONUS_THRESHOLD = 63;
 const UPPER_BONUS = 35;
 
+const COLOR_PALETTE = [
+  '#facc15', '#fb923c', '#f87171', '#f472b6', '#c084fc',
+  '#818cf8', '#38bdf8', '#22d3ee', '#2dd4bf', '#4ade80', '#a3e635',
+];
+
+const STORAGE_KEY = 'yaice_multiplayer_players';
+
 let dice = [1, 1, 1, 1, 1];
 let held = [false, false, false, false, false];
 let rollsLeft = 3;
-let scores = {}; // key -> number or null
 let gameOver = false;
+let players = [];
+let playerScores = [];
+let currentPlayerIndex = 0;
+let scores = null; // reference to playerScores[currentPlayerIndex]
+let lastAction = null;
 
 const diceRow = document.getElementById('dice-row');
 const rollBtn = document.getElementById('roll-btn');
@@ -30,21 +41,36 @@ const scorecardBody = document.getElementById('scorecard-body');
 const totalScoreEl = document.getElementById('total-score');
 const messageEl = document.getElementById('message');
 const gameOverOverlay = document.getElementById('game-over');
-const finalScoreEl = document.getElementById('final-score');
+const finalScoresEl = document.getElementById('final-scores');
 const saveNotice = document.getElementById('save-notice');
 const saveCategoryEl = document.getElementById('save-category');
 const undoBtn = document.getElementById('undo-btn');
+const playersBar = document.getElementById('players-bar');
 
-let lastAction = null;
+const setupOverlay = document.getElementById('setup-overlay');
+const modeButtons = document.querySelectorAll('.mode-btn');
+const playerSetup = document.getElementById('player-setup');
+const playerListEl = document.getElementById('player-list');
+const addPlayerBtn = document.getElementById('add-player');
+const startGameBtn = document.getElementById('start-game-btn');
+
+const handoffOverlay = document.getElementById('handoff-overlay');
+const handoffNameEl = document.getElementById('handoff-name');
+const handoffOkBtn = document.getElementById('handoff-ok');
+
+let setupMode = 'single';
+let setupPlayers = [];
 
 document.getElementById('new-game').addEventListener('click', () => {
-  if (confirm('Start a new game? Current progress will be lost.')) {
-    resetGame();
-  }
+  const inProgress = rollsLeft < 3 ||
+    playerScores.some(ps => CATEGORIES.some(c => ps[c.key] !== null));
+  if (inProgress && !confirm('Start a new game? Current progress will be lost.')) return;
+  openSetup();
 });
-document.getElementById('restart-btn').addEventListener('click', resetGame);
+document.getElementById('restart-btn').addEventListener('click', openSetup);
 rollBtn.addEventListener('click', rollDice);
 undoBtn.addEventListener('click', undoLastAction);
+handoffOkBtn.addEventListener('click', advanceToNextPlayer);
 
 const shakeToggle = document.getElementById('shake-toggle');
 const SHAKE_THRESHOLD = 22;
@@ -102,14 +128,146 @@ shakeToggle.addEventListener('change', () => {
   }
 });
 
-function resetGame() {
+function setAccent(color) {
+  document.documentElement.style.setProperty('--accent', color);
+}
+
+function emptyScores() {
+  const s = {};
+  CATEGORIES.forEach(c => s[c.key] = null);
+  return s;
+}
+
+function loadSavedPlayers() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed) && parsed.every(p => p && typeof p.name === 'string' && typeof p.color === 'string')) {
+      return parsed;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function pickRandomColor(exclude = []) {
+  const available = COLOR_PALETTE.filter(c => !exclude.includes(c));
+  const pool = available.length > 0 ? available : COLOR_PALETTE;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function openSetup() {
+  setupMode = 'single';
+  const saved = loadSavedPlayers();
+  if (saved && saved.length >= 2) {
+    setupPlayers = saved.map(p => ({ name: p.name, color: p.color }));
+  } else {
+    const c1 = pickRandomColor();
+    const c2 = pickRandomColor([c1]);
+    setupPlayers = [{ name: '', color: c1 }, { name: '', color: c2 }];
+  }
+  renderSetup();
+  setupOverlay.classList.remove('hidden');
+}
+
+modeButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    setupMode = btn.dataset.mode;
+    renderSetup();
+  });
+});
+
+addPlayerBtn.addEventListener('click', () => {
+  setupPlayers.push({ name: '', color: pickRandomColor(setupPlayers.map(p => p.color)) });
+  renderPlayerList();
+});
+
+startGameBtn.addEventListener('click', () => {
+  if (setupMode === 'multi') {
+    if (setupPlayers.length < 2) {
+      alert('Add at least 2 players for multiplayer.');
+      return;
+    }
+    players = setupPlayers.map((p, i) => ({
+      name: p.name.trim() || `Player ${i + 1}`,
+      color: p.color,
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+  } else {
+    players = [{ name: 'Player', color: '#facc15' }];
+  }
+  startGame();
+});
+
+function renderSetup() {
+  modeButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === setupMode);
+  });
+  playerSetup.classList.toggle('hidden', setupMode !== 'multi');
+  renderPlayerList();
+}
+
+function renderPlayerList() {
+  playerListEl.innerHTML = '';
+  setupPlayers.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+
+    const top = document.createElement('div');
+    top.className = 'player-row-top';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'player-name-input';
+    input.placeholder = `Player ${i + 1}`;
+    input.value = p.name;
+    input.addEventListener('input', () => { p.name = input.value; });
+    top.appendChild(input);
+
+    if (setupPlayers.length > 2) {
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove-player-btn';
+      removeBtn.textContent = '×';
+      removeBtn.addEventListener('click', () => {
+        setupPlayers.splice(i, 1);
+        renderPlayerList();
+      });
+      top.appendChild(removeBtn);
+    }
+
+    row.appendChild(top);
+
+    const swatches = document.createElement('div');
+    swatches.className = 'color-swatches';
+    COLOR_PALETTE.forEach(color => {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = 'color-swatch' + (p.color === color ? ' selected' : '');
+      swatch.style.background = color;
+      swatch.addEventListener('click', () => {
+        p.color = color;
+        renderPlayerList();
+      });
+      swatches.appendChild(swatch);
+    });
+    row.appendChild(swatches);
+
+    playerListEl.appendChild(row);
+  });
+}
+
+function startGame() {
   dice = [1, 1, 1, 1, 1];
   held = [false, false, false, false, false];
   rollsLeft = 3;
-  scores = {};
-  CATEGORIES.forEach(c => scores[c.key] = null);
   gameOver = false;
   lastAction = null;
+  currentPlayerIndex = 0;
+  playerScores = players.map(() => emptyScores());
+  scores = playerScores[0];
+  setAccent(players[0].color);
+  setupOverlay.classList.add('hidden');
   gameOverOverlay.classList.add('hidden');
   hideSaveNotice();
   messageEl.textContent = 'Roll the dice to begin!';
@@ -234,39 +392,110 @@ function selectCategory(key) {
   const category = CATEGORIES.find(c => c.key === key);
   showSaveNotice(category.label);
 
-  if (CATEGORIES.every(c => scores[c.key] !== null)) {
+  const allDone = playerScores.every(ps => CATEGORIES.every(c => ps[c.key] !== null));
+  if (allDone) {
     endGame();
+  } else if (players.length > 1) {
+    const nextIndex = (currentPlayerIndex + 1) % players.length;
+    handoffNameEl.textContent = players[nextIndex].name;
+    handoffOverlay.classList.remove('hidden');
   } else {
     messageEl.textContent = 'Roll the dice for your next turn!';
   }
   render();
 }
 
-function upperTotal() {
+function advanceToNextPlayer() {
+  handoffOverlay.classList.add('hidden');
+  currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+  scores = playerScores[currentPlayerIndex];
+  dice = [1, 1, 1, 1, 1];
+  held = [false, false, false, false, false];
+  rollsLeft = 3;
+  lastAction = null;
+  hideSaveNotice();
+  setAccent(players[currentPlayerIndex].color);
+  messageEl.textContent = 'Roll the dice for your next turn!';
+  render();
+}
+
+function upperTotal(s) {
   return CATEGORIES.filter(c => c.section === 'upper')
-    .reduce((sum, c) => sum + (scores[c.key] || 0), 0);
+    .reduce((sum, c) => sum + (s[c.key] || 0), 0);
 }
 
-function upperBonus() {
-  return upperTotal() >= UPPER_BONUS_THRESHOLD ? UPPER_BONUS : 0;
+function upperBonus(s) {
+  return upperTotal(s) >= UPPER_BONUS_THRESHOLD ? UPPER_BONUS : 0;
 }
 
-function lowerTotal() {
+function lowerTotal(s) {
   return CATEGORIES.filter(c => c.section === 'lower')
-    .reduce((sum, c) => sum + (scores[c.key] || 0), 0);
+    .reduce((sum, c) => sum + (s[c.key] || 0), 0);
 }
 
-function grandTotal() {
-  return upperTotal() + upperBonus() + lowerTotal();
+function grandTotal(s) {
+  return upperTotal(s) + upperBonus(s) + lowerTotal(s);
 }
 
 function endGame() {
   gameOver = true;
-  finalScoreEl.textContent = `Final Score: ${grandTotal()}`;
+  finalScoresEl.innerHTML = '';
+  const results = players.map((p, i) => ({ player: p, total: grandTotal(playerScores[i]) }));
+  const maxScore = Math.max(...results.map(r => r.total));
+  results
+    .slice()
+    .sort((a, b) => b.total - a.total)
+    .forEach(r => {
+      const row = document.createElement('div');
+      row.className = 'final-score-row' + (players.length > 1 && r.total === maxScore ? ' winner' : '');
+      const label = document.createElement('span');
+      label.className = 'player-label';
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      dot.style.width = '10px';
+      dot.style.height = '10px';
+      dot.style.borderRadius = '50%';
+      dot.style.background = r.player.color;
+      label.appendChild(dot);
+      label.appendChild(document.createTextNode(r.player.name));
+      const score = document.createElement('span');
+      score.textContent = r.total;
+      row.appendChild(label);
+      row.appendChild(score);
+      finalScoresEl.appendChild(row);
+    });
   gameOverOverlay.classList.remove('hidden');
 }
 
+function renderPlayersBar() {
+  if (players.length <= 1) {
+    playersBar.classList.add('hidden');
+    playersBar.innerHTML = '';
+    return;
+  }
+  playersBar.classList.remove('hidden');
+  playersBar.innerHTML = '';
+  players.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip' + (i === currentPlayerIndex ? ' current' : '');
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.style.background = p.color;
+    const name = document.createElement('span');
+    name.textContent = p.name;
+    const score = document.createElement('span');
+    score.className = 'chip-score';
+    score.textContent = grandTotal(playerScores[i]);
+    chip.appendChild(dot);
+    chip.appendChild(name);
+    chip.appendChild(score);
+    playersBar.appendChild(chip);
+  });
+}
+
 function render() {
+  renderPlayersBar();
+
   // Dice
   diceRow.innerHTML = '';
   const FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
@@ -318,10 +547,11 @@ function render() {
   // Bonus row
   const bonusRow = document.createElement('tr');
   bonusRow.className = 'score-row filled';
-  bonusRow.innerHTML = `<td>Upper Bonus (≥${UPPER_BONUS_THRESHOLD})</td><td class="score-value">${upperBonus()}</td>`;
+  bonusRow.innerHTML = `<td>Upper Bonus (≥${UPPER_BONUS_THRESHOLD})</td><td class="score-value">${upperBonus(scores)}</td>`;
   scorecardBody.appendChild(bonusRow);
 
-  totalScoreEl.textContent = grandTotal();
+  totalScoreEl.textContent = grandTotal(scores);
 }
 
-resetGame();
+players = [{ name: 'Player', color: '#facc15' }];
+startGame();

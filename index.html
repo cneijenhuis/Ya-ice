@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ya-Ice</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <div class="app">
@@ -12,6 +12,8 @@
     <h1>Ya-Ice</h1>
     <button id="new-game" class="small-btn">New Game</button>
   </header>
+
+  <div id="players-bar" class="players-bar hidden"></div>
 
   <div class="dice-area">
     <div class="dice-row" id="dice-row"></div>
@@ -43,14 +45,36 @@
   </div>
 </div>
 
-<div id="game-over" class="overlay hidden">
-  <div class="overlay-card">
-    <h2>Game Over!</h2>
-    <p id="final-score"></p>
-    <button id="restart-btn" class="primary-btn">Play Again</button>
+<div id="setup-overlay" class="overlay hidden">
+  <div class="overlay-card setup-card">
+    <h2>New Game</h2>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="single">Single Player</button>
+      <button class="mode-btn" data-mode="multi">Multiplayer</button>
+    </div>
+    <div id="player-setup" class="player-setup hidden">
+      <div id="player-list"></div>
+      <button id="add-player" class="small-btn">+ Add Player</button>
+    </div>
+    <button id="start-game-btn" class="primary-btn">Start Game</button>
   </div>
 </div>
 
-<script src="game.js?v=3"></script>
+<div id="handoff-overlay" class="overlay hidden">
+  <div class="overlay-card">
+    <h2>Hand to <span id="handoff-name"></span></h2>
+    <button id="handoff-ok" class="primary-btn">OK</button>
+  </div>
+</div>
+
+<div id="game-over" class="overlay hidden">
+  <div class="overlay-card">
+    <h2>Game Over!</h2>
+    <div id="final-scores"></div>
+    <button id="restart-btn" class="primary-btn">New Game</button>
+  </div>
+</div>
+
+<script src="game.js?v=4"></script>
 </body>
 </html>
