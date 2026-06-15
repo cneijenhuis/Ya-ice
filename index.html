@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Yahtzee</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Yahtzee</h1>
+    <button id="new-game" class="small-btn">New Game</button>
+  </header>
+
+  <div class="dice-area">
+    <div class="dice-row" id="dice-row"></div>
+    <div class="roll-info">
+      <span id="rolls-left">Rolls left: 3</span>
+    </div>
+    <button id="roll-btn" class="primary-btn">Roll Dice</button>
+  </div>
+
+  <div class="scorecard">
+    <table>
+      <thead>
+        <tr><th>Category</th><th>Score</th></tr>
+      </thead>
+      <tbody id="scorecard-body"></tbody>
+      <tfoot>
+        <tr class="total-row"><td>Total</td><td id="total-score">0</td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div id="message" class="message"></div>
+</div>
+
+<div id="game-over" class="overlay hidden">
+  <div class="overlay-card">
+    <h2>Game Over!</h2>
+    <p id="final-score"></p>
+    <button id="restart-btn" class="primary-btn">Play Again</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>

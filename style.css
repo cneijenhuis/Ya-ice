@@ -1,0 +1,241 @@
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #f1f5f9;
+  min-height: 100vh;
+  touch-action: manipulation;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 12px 32px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 1px;
+  color: #facc15;
+}
+
+.small-btn {
+  background: #334155;
+  color: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.small-btn:active {
+  background: #475569;
+}
+
+.dice-area {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.dice-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.die {
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  background: #f8fafc;
+  color: #1e293b;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+
+.die.held {
+  border-color: #facc15;
+  background: #fef9c3;
+  transform: translateY(-4px);
+}
+
+.die.rolling {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-12deg); }
+  50% { transform: rotate(12deg); }
+  75% { transform: rotate(-6deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.roll-info {
+  text-align: center;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: #94a3b8;
+}
+
+.primary-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  background: #facc15;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.primary-btn:active {
+  background: #eab308;
+}
+
+.primary-btn:disabled {
+  background: #475569;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.scorecard {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  text-align: left;
+  padding: 8px 4px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  border-bottom: 1px solid #334155;
+}
+
+thead th:last-child, tbody td:last-child, tfoot td:last-child {
+  text-align: right;
+}
+
+.section-row td {
+  padding-top: 14px;
+  padding-bottom: 4px;
+  color: #facc15;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+tbody tr.score-row {
+  cursor: pointer;
+}
+
+tbody td {
+  padding: 10px 4px;
+  border-bottom: 1px solid #334155;
+  font-size: 0.95rem;
+}
+
+.score-row .score-value {
+  font-weight: bold;
+}
+
+.score-row.unfilled .score-value {
+  color: #64748b;
+  font-style: italic;
+}
+
+.score-row.unfilled.selectable {
+  background: #334155;
+}
+
+.score-row.unfilled.selectable:active {
+  background: #475569;
+}
+
+.score-row.filled .score-value {
+  color: #4ade80;
+}
+
+tfoot td {
+  padding: 10px 4px;
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: #facc15;
+}
+
+.message {
+  text-align: center;
+  margin-top: 10px;
+  min-height: 1.2em;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay-card {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+}
+
+.overlay-card h2 {
+  margin-top: 0;
+  color: #facc15;
+}
+
+.overlay-card p {
+  font-size: 1.2rem;
+  margin: 16px 0;
+}
